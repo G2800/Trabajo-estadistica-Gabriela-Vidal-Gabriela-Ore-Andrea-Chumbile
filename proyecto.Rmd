@@ -1,0 +1,13 @@
+```{r}
+#variable independiente: GDP
+library(htmltab)
+link="https://www.cia.gov/library/publications/resources/the-world-factbook/fields/211rank.html"
+linkpath='//*[@id="rankOrder"]'
+
+gdp = htmltab(doc = link, 
+                which =linkpath)
+```
+```{r}
+
+```
+

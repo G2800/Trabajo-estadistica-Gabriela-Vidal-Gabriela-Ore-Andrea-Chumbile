@@ -1,5 +1,5 @@
 ---
-title: "Libertad empresarial"
+title: "Libertad empresarial y PBI"
 output: html_notebook
 ---
 
@@ -39,6 +39,26 @@ empresa_A=na.omit(empresa_A)
 empresa_A$Pais=trimws(empresa_A$Pais,whitespace = "[\\h\\v]")
 ```
 
+# Variable PBI
+
+```{r}
+install.packages("htmltab")
+library(htmltab)
+linkGDP= "https://www.cia.gov/library/publications/resources/the-world-factbook/fields/211rank.html"
+linkPath_GDP='//*[@id="rankOrder"]'
+gdp= htmltab(doc = linkGDP,which =linkPath_GDP)
+View(gdp)
+
+gdp=gdp[,-c(1,4)]
+names(gdp)
+names(gdp) = c("Pais", "PBI")
+gdp$PBI =   gsub("\\$|\\,", "", gdp$PBI)
+gdp$PBI = as.numeric(gdp$PBI)
+str(gdp)
+
+# notese que la data gdp contiene a todos los países, pero al momento de hacer el merging con las otras variables independientes de cada región (Europa y África), el key "Pais" solo tomará a los países según la región solicitada. 
+
+```
 
 
 

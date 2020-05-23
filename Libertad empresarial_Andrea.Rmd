@@ -1,0 +1,47 @@
+---
+title: "Libertad empresarial"
+output: html_notebook
+---
+
+
+# Variable : Libertad empresarial 
+```{r}
+install.packages("readr")
+library(readr)
+
+# Libertad empresarial: Europa 
+
+empresa_E <- read_csv("libertades economicas Europa.csv")
+View(empresa_E)
+str(empresa_E)
+
+empresa_E=empresa_E[,-c(2:9)]
+empresa_E=empresa_E[,-c(3:7)]
+names(empresa_E) = c("Pais", "Libertad_empresarial")
+empresa_E$Libertad_empresarial = as.numeric(empresa_E$Libertad_empresarial)
+str(empresa_E)
+empresa_E[!complete.cases(empresa_E),]
+empresa_E=na.omit(empresa_E)
+empresa_E$Pais=trimws(empresa_E$Pais,whitespace = "[\\h\\v]")
+
+# Libertad empresarial: África 
+
+empresa_A <- read_csv("libertades economicas Africa Subsahariana.csv")
+View(empresa_A)
+str(empresa_A)
+empresa_A=empresa_A[,-c(2:9)]
+empresa_A=empresa_A[,-c(3:7)]
+names(empresa_A) = c("Pais", "Libertad_empresarial")
+empresa_A$Libertad_empresarial = as.numeric(empresa_A$Libertad_empresarial)
+str(empresa_A)
+empresa_A[!complete.cases(empresa_A),]
+empresa_A=na.omit(empresa_A)
+empresa_A$Pais=trimws(empresa_A$Pais,whitespace = "[\\h\\v]")
+```
+
+
+
+
+```
+
+

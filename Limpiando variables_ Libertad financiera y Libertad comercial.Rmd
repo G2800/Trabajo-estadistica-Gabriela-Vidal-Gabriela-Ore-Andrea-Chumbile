@@ -1,0 +1,81 @@
+```{r}
+library(readr)
+freeafrica <- read_csv("freeafrica.csv")
+View(freeafrica)
+```
+```{r}
+##limpiando
+libafrica=freeafrica[c(1,13,15)]
+head(libafrica)
+```
+```{r}
+library(readr)
+freeurope <- read_csv("freeurope.csv")
+View(freeurope)
+```
+
+
+```{r}
+#subset de las variables independientes: Libertad financiera y Libertad comercial
+libeurope=freeurope[c(1,13,15)]
+head(libeurope)
+```
+```{r}
+#juntando las filas de ambas datas
+freeafricaeurope=rbind(libeurope,libafrica)
+```
+
+```{r}
+#Variable independiente
+##PREPROCESAMIENTO DE DATOS 
+##Variable independiente: Religion
+
+#(Gabriela Vidal)
+library(htmltab)
+link="https://en.wikipedia.org/wiki/Importance_of_religion_by_country"
+linkPath='//*[@id="mw-content-text"]/div/table'
+religion=htmltab(doc=link, which=linkPath)
+head(religion)
+```
+
+##exploramos la data
+```{r}
+names(religion)
+str(religion)
+```
+#Selecciono los 48 siguientes
+```{r}
+#el ultimo pais que me toca editar es Grecia (31)
+religion <- religion[-c(6,7),] #restarle uno a todo
+religion2 <- religion[-c(6,7,10,12,14,16,25,27,29,30,31,37,41,42,43,44,46,47,48),]
+head(religion2)
+#eliminamos japon, honk kong, vietnam, Australia, Nueva Zelanda,Cuba,Uruguay,canada,corea del sur, kazajistan, taiwan, israel,uzbekistan, belice,argentina, estados unidos, chile,singapur, jamaica
+#elimino el resto de paises de la tabla hasta la 149
+```
+
+
+```{r}
+religionGV <- religion2[-c(1:32),]
+View(religionGV)
+```
+
+```{r}
+religionGV <- religionGV[-c(1,2,3,5,6,9,10,16,17,18,19,20,21,22,25,30,31,32,36,38,40,41,42,43,44,47,48,49,52),]
+religionGV <- religionGV[-c(27,32,35,41,43,47,48,50,53,55,59,61),]
+religionGV <- religionGV[-c(49:55),]
+```
+
+
+```{r}
+#cambiamos los nombres de las columnas
+names(religionGV) = c("Pais","Importante","NoImportante")
+```
+
+```{r}
+str(religionGV)
+religionGV=na.omit(religionGV)
+religionGV$Importante <- parse_number(religionGV$Importante) #reconociendo el %
+religionGV$NoImportante <- parse_number(religionGV$NoImportante)
+religionGV[,-1]=lapply(religionGV[,-1], as.numeric)
+```
+

@@ -1,0 +1,65 @@
+#Preprocesamiento de dos variables independientes
+##AFRICA: Derechos de Propiedad y Libertad de Inversión
+```{r}
+#install.packages("readr")
+library(readr)
+Libertades_economicas_Africa <- read_csv("libertades economicas Africa Subsahariana.csv")
+
+#cambiamos de nombre a la data
+africa <- Libertades_economicas_Africa  
+
+names(africa)
+#eliminamos columnas innecesarias
+africa[,c(2:3)] = NULL
+names(africa)
+africa[,c(3:11)] = NULL
+names(africa)
+africa$`Financial Freedom` = NULL
+
+#cambiamos nombres
+names(africa) = c("Pais", "Derechos_Propiedad","Libertad_Inversion")
+
+#convertir a numérica
+str(africa)
+africa[,-1]=lapply(africa[,-1], as.numeric)
+
+#verificamos NA
+africa[!complete.cases(africa),] 
+
+#eliminamos espacios en blanco
+africa$Pais <- trimws(africa$Pais,whitespace = "[\\h\\v]") 
+africa$Derechos_Propiedad <- trimws(africa$Derechos_Propiedad ,whitespace = "[\\h\\v]") 
+africa$Libertad_Inversion <- trimws(africa$Libertad_Inversion ,whitespace = "[\\h\\v]") 
+View(africa)
+```
+
+
+##EUROPA: Derechos de Propiedad y Libertad de Inversión
+```{r}
+library(readr)
+Libertades_economicas_Europa <- read_csv("Libertades economicas-Europa.csv")
+europa <- Libertades_economicas_Europa 
+
+#eliminamos columnas innecesarias
+names(europa)
+europa[,c(2:3)] = NULL
+names(europa)
+europa[,c(3:11)] = NULL
+europa$`Financial Freedom` = NULL
+
+#cambiamos nombres
+names(europa) = c("Pais", "Derechos_Propiedad","Libertad_Inversion")
+
+#convertir a numérica
+str(europa)
+europa$Derechos_Propiedad <- as.numeric(europa$Derechos_Propiedad)
+
+#verificamos NA
+europa[!complete.cases(europa),] 
+
+#eliminamos espacios en blanco
+europa$Pais <- trimws(europa$Pais,whitespace = "[\\h\\v]") 
+europa$Derechos_Propiedad  <- trimws(europa$Derechos_Propiedad  ,whitespace = "[\\h\\v]") 
+europa$Libertad_Inversion <- trimws(europa$Libertad_Inversion ,whitespace = "[\\h\\v]") 
+View(europa)
+```

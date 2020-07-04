@@ -1,0 +1,168 @@
+##CLUSTERIZACION DIVISIVA
+
+#Limpieza de África
+```{r}
+library(rio)
+lkDTA="https://github.com/G2800/Trabajo-estadistica-Gabriela-Vidal-Gabriela-Ore-Andrea-Chumbile/raw/master/libertades%20economicas%20Africa%20Subsahariana.csv"
+freeafrica=import(lkDTA)
+```
+
+```{r}
+##limpiando
+libafrica=freeafrica[c(1,4,10,13,14,15)]
+head(libafrica)
+```
+
+```{r}
+libafrica[,-c(1)]=lapply(libafrica[,-c(1)], as.numeric) # a numerico
+```
+
+```{r}
+str(libafrica)
+```
+
+```{r}
+names(libafrica) = c("Pais", "Derechos_Propiedad","Libertad_Empresarial", "Libertad_Comercial","Libertad_Inversion","Libertad_Financiera") 
+```
+
+```{r}
+libafrica=na.omit(libafrica)
+libafrica$Pais=trimws(libafrica$Pais,whitespace = "[\\h\\v]")
+```
+
+#Limpieza data Europa
+```{r}
+library(rio)
+data="https://github.com/G2800/Trabajo-estadistica-Gabriela-Vidal-Gabriela-Ore-Andrea-Chumbile/raw/master/libertades%20economicas%20Europa.csv"
+ivariables=import(data)
+# eliminando columnas innecesarias
+ivariables[,c(5:9)] = NULL
+ivariables[,c(2,3,6,7)] = NULL
+# cambiando de nombres 
+names(ivariables)
+names(ivariables) = c("Pais", "Derechos_Propiedad","Libertad_Empresarial", "Libertad_Comercial","Libertad_Inversion","Libertad_Financiera")
+# a numérico 
+ivariables[,c(2:6)]=lapply(ivariables[,c(2:6)],as.numeric)
+str(ivariables)
+# omitir los NA's 
+ivariables=na.omit(ivariables)
+ivariables$Pais=trimws(ivariables$Pais,whitespace = "[\\h\\v]")
+```
+
+# Variable: PBI
+```{r}
+library(htmltab)
+linkGDP= "https://www.cia.gov/library/publications/resources/the-world-factbook/fields/211rank.html"
+linkPath_GDP='//*[@id="rankOrder"]'
+gdp= htmltab(doc = linkGDP,which =linkPath_GDP)
+gdp=gdp[,-c(1,4)]
+names(gdp) = c("Pais", "PBI")
+gdp$PBI =   gsub("\\$|\\,", "", gdp$PBI)
+gdp$PBI = as.numeric(gdp$PBI)
+str(gdp)
+gdp=na.omit(gdp)
+gdp$Pais=trimws(gdp$Pais,whitespace = "[\\h\\v]")
+```
+
+#junto africa, europa
+```{r}
+europafrica=rbind(libafrica,ivariables)
+```
+
+#merge con todas las variables independientes
+```{r}
+total=merge(europafrica,gdp)
+```
+
+#CLUSTERIZACION DIVISIVA sugiriendo 4 clusters
+
+```{r}
+# bibliotecas:
+library(stringr)
+library(magrittr)
+library(htmltab)
+library(factoextra)
+library(cluster)
+```
+
+#Primero utilizamos gap_stat 
+```{r}
+#calculamos la distancia
+g.dist = daisy(total[,c(2:7)], metric="gower")
+
+#Sugerimos el # de clusters
+res.diana <- hcut(g.dist, k = 4,hc_func='diana')
+
+total$clustDIV=res.diana$cluster 
+
+#Visualizando el resultado de numero de clusters
+
+fviz_dend(res.diana, cex = 0.7,horiz = F)  
+```
+#Al sugerir 4  clusters con la tecnica divisiva vemos que el número de iteraciones es aprox. 0.37
+
+```{r}
+#Evaluación gráfica para agnes:
+
+fviz_silhouette(res.diana)
+```
+#La gráfica de siluetas nos muestra que en dos clusters hay varios paises mal ubicados. El promedio es 0.32
+
+
+#Clusterizacion divisiva sugiriendo 3 clusters
+```{r}
+#ya calculamos la distancia antes por ende ya no es necesario
+
+#Sugerimos el # de clusters
+res.diana2 <- hcut(g.dist, k = 3,hc_func='diana')
+
+total$clustDIV2=res.diana2$cluster 
+
+#Visualizando el resultado de numero de clusters
+
+fviz_dend(res.diana2, cex = 0.7,horiz = F)  
+```
+#Al sugerir 3 clusters, el numero de iteraciones es 0.39 aprox. 
+
+```{r}
+#Evaluación gráfica para agnes:
+
+fviz_silhouette(res.diana2)
+```
+#Definitivamente, al proponer solo 3 clusters el resultado es mejor, ya que el promedio es 0.39 (mayor que el resto de promedios) y solo hay casos mal asignados en el cluster 1.
+
+
+
+
+#Clusterizacion divisiva sugiriendo 2 clusters (MEJOR OPCION)
+```{r}
+#ya calculamos la distancia antes por ende ya no es necesario
+
+#Sugerimos el # de clusters
+res.diana3 <- hcut(g.dist, k = 2,hc_func='diana')
+
+total$clustDIV3=res.diana3$cluster 
+
+#Visualizando el resultado de numero de clusters
+
+fviz_dend(res.diana3, cex = 0.7,horiz = F)  
+```
+
+```{r}
+#Evaluación gráfica para agnes:
+
+fviz_silhouette(res.diana3)
+```
+#En gráfica vemos que al proponer solo 2 clusters no hay ningun caso mal agrupado y el promedio es 0.52 (mas proximo a 1)
+
+
+¿qué paises están en cada cluster?
+```{r}
+total[total$clustDIV3==1 ,'Pais'] #vemos la mayoria de los paises de Europa
+
+total[total$clustDIV3==2 ,'Pais'] 
+#vemos todos los paises de Africa, pero se han incluido paises como Biolorusia (Belarus) y Bosnia and Herzegovina que son de Europa
+```
+
+#En general, la clusterizacion divisiva es una mejor opcion porque podemos clusterizar con el menor numero de iteraciones. 
+#En este caso, es recomendable solo agrupar todos los países en 2 clusters

@@ -1,0 +1,106 @@
+---
+title: "Cluster densidad"
+output: html_notebook
+---
+
+
+
+# Europa
+```{r}
+library(rio)
+data="https://github.com/G2800/Trabajo-estadistica-Gabriela-Vidal-Gabriela-Ore-Andrea-Chumbile/raw/master/libertades%20economicas%20Europa.csv"
+ivariables=import(data)
+
+# eliminando columnas innecesarias
+ivariables[,c(5:9)] = NULL
+ivariables[,c(2,3,6,7)] = NULL
+
+# cambiando de nombres 
+names(ivariables)
+names(ivariables) = c("Pais", "Derechos_Propiedad","Libertad_Empresarial", "Libertad_Comercial","Libertad_Inversion","Libertad_Financiera")
+
+# a numérico 
+ivariables[,c(2:6)]=lapply(ivariables[,c(2:6)],as.numeric)
+str(ivariables)
+
+# omitir los NA's 
+ivariables=na.omit(ivariables)
+
+ivariables$Pais=trimws(ivariables$Pais,whitespace = "[\\h\\v]")
+
+```
+
+# Africa 
+```{r}
+lkDTA="https://github.com/G2800/Trabajo-estadistica-Gabriela-Vidal-Gabriela-Ore-Andrea-Chumbile/raw/master/libertades%20economicas%20Africa%20Subsahariana.csv"
+freeafrica=import(lkDTA)
+
+##limpiando
+libafrica=freeafrica[c(1,4,10,13,14,15)]
+head(libafrica)
+
+libafrica[,-c(1)]=lapply(libafrica[,-c(1)], as.numeric) # a numerico
+str(libafrica)
+
+names(libafrica) = c("Pais", "Derechos_Propiedad","Libertad_Empresarial", "Libertad_Comercial","Libertad_Inversion","Libertad_Financiera") 
+
+libafrica=na.omit(libafrica)
+libafrica$Pais=trimws(libafrica$Pais,whitespace = "[\\h\\v]")
+```
+
+# GDP 
+```{r}
+
+library(htmltab)
+linkGDP= "https://www.cia.gov/library/publications/resources/the-world-factbook/fields/211rank.html"
+linkPath_GDP='//*[@id="rankOrder"]'
+gdp= htmltab(doc = linkGDP,which =linkPath_GDP)
+
+gdp=gdp[,-c(1,4)]
+names(gdp) = c("Pais", "PBI")
+gdp$PBI =   gsub("\\$|\\,", "", gdp$PBI)
+gdp$PBI = as.numeric(gdp$PBI)
+str(gdp)
+
+gdp=na.omit(gdp)
+
+gdp$Pais=trimws(gdp$Pais,whitespace = "[\\h\\v]")
+
+```
+
+#  junto Europa y Africa 
+```{r}
+europafrica=rbind(libafrica,ivariables)
+
+```
+# merge 
+```{r}
+total=merge(europafrica,gdp)
+```
+ 
+# clusterización por densidad
+```{r}
+library(cluster)
+g.dist = daisy(total[,c(2:7)], metric="gower")
+
+proyeccion = cmdscale(g.dist, k=2,add = T)
+total$dim1 <- proyeccion$points[,1] 
+total$dim2 <- proyeccion$points[,2]
+
+g.dist.cmd = daisy(total[,c('dim1','dim2')], metric = 'euclidean')
+
+# Calculo de epsilon
+library(dbscan) 
+kNNdistplot(g.dist.cmd, k=6)
+```
+
+
+```{r}
+library(fpc)
+db.cmd = dbscan(g.dist.cmd, eps=0.06, MinPts=6,method = 'dist')
+db.cmd
+
+# se obtienen 3 clusters. Hay 24 elementos que no se pueden clusterizar 
+
+```
+

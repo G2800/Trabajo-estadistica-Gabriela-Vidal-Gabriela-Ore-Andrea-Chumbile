@@ -1,0 +1,107 @@
+#Limpieza de África
+```{r}
+library(rio)
+lkDTA="https://github.com/G2800/Trabajo-estadistica-Gabriela-Vidal-Gabriela-Ore-Andrea-Chumbile/raw/master/libertades%20economicas%20Africa%20Subsahariana.csv"
+freeafrica=import(lkDTA)
+```
+
+```{r}
+##limpiando
+libafrica=freeafrica[c(1,4,10,13,14,15)]
+head(libafrica)
+```
+
+```{r}
+libafrica[,-c(1)]=lapply(libafrica[,-c(1)], as.numeric) # a numerico
+```
+
+```{r}
+str(libafrica)
+```
+
+```{r}
+names(libafrica) = c("Pais", "Derechos_Propiedad","Libertad_Empresarial", "Libertad_Comercial","Libertad_Inversion","Libertad_Financiera") 
+```
+
+
+```{r}
+libafrica=na.omit(libafrica)
+libafrica$Pais=trimws(libafrica$Pais,whitespace = "[\\h\\v]")
+```
+
+```{r}
+library(rio)
+data="https://github.com/G2800/Trabajo-estadistica-Gabriela-Vidal-Gabriela-Ore-Andrea-Chumbile/raw/master/libertades%20economicas%20Europa.csv"
+ivariables=import(data)
+# eliminando columnas innecesarias
+ivariables[,c(5:9)] = NULL
+ivariables[,c(2,3,6,7)] = NULL
+# cambiando de nombres 
+names(ivariables)
+names(ivariables) = c("Pais", "Derechos_Propiedad","Libertad_Empresarial", "Libertad_Comercial","Libertad_Inversion","Libertad_Financiera")
+# a numérico 
+ivariables[,c(2:6)]=lapply(ivariables[,c(2:6)],as.numeric)
+str(ivariables)
+# omitir los NA's 
+ivariables=na.omit(ivariables)
+ivariables$Pais=trimws(ivariables$Pais,whitespace = "[\\h\\v]")
+```
+
+# Variable: PBI
+```{r}
+library(htmltab)
+linkGDP= "https://www.cia.gov/library/publications/resources/the-world-factbook/fields/211rank.html"
+linkPath_GDP='//*[@id="rankOrder"]'
+gdp= htmltab(doc = linkGDP,which =linkPath_GDP)
+gdp=gdp[,-c(1,4)]
+names(gdp) = c("Pais", "PBI")
+gdp$PBI =   gsub("\\$|\\,", "", gdp$PBI)
+gdp$PBI = as.numeric(gdp$PBI)
+str(gdp)
+gdp=na.omit(gdp)
+gdp$Pais=trimws(gdp$Pais,whitespace = "[\\h\\v]")
+```
+
+#junto africa, europa
+```{r}
+europafrica=rbind(libafrica,ivariables)
+```
+
+#merge con todas las variables independientes
+```{r}
+total=merge(europafrica,gdp)
+```
+
+#clusterización aglomerativa
+
+
+```{r}
+library(cluster)
+
+g.dist = daisy(total[,c(2:7)], metric="gower")
+```
+
+```{r}
+library(factoextra)
+
+res.agnes<- hcut(g.dist, k = 4,hc_func='agnes',hc_method = "ward.D")
+
+total$clustAG=res.agnes$cluster
+```
+
+```{r}
+fviz_silhouette(res.agnes)
+```
+#la silueta es 0.32 con la técnica aglomerativa
+
+
+
+
+
+
+
+
+
+
+
+

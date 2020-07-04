@@ -1,0 +1,105 @@
+BASE DE DATOS RELIGION TOTAL
+
+```{r}
+install.packages("htmltab")
+library(htmltab)
+
+link_wik="https://en.wikipedia.org/wiki/Importance_of_religion_by_country"
+
+linkPath_wik='//*[@id="mw-content-text"]/div/table'
+
+religion=htmltab(doc=link_wik, which=linkPath_wik)
+
+head(religion)
+```
+
+#Preprocesamiento de la data
+```{r}
+#cambiamos los nombres de las columnas
+names(religion) = c("Pais","Importante","NoImportante")
+
+#limpiamos la data
+install.packages("readr")
+library(readr)
+religion$Importante <- parse_number(religion$Importante)
+religion$NoImportante <- parse_number(religion$NoImportante)
+
+#eliminamos los espacios en blanco
+religion[,c(1,2,3)]=lapply(religion[,c(1,2,3)], trimws,whitespace = "[\\h\\v]")
+head(religion)
+View(religion)
+```
+
+
+#Realizaré merge con la data que tienen a los paises de Europa y Africa junta
+
+```{r}
+#Limpieza de África
+install.packages("rio")
+library(rio)
+lkDTA="https://github.com/G2800/Trabajo-estadistica-Gabriela-Vidal-Gabriela-Ore-Andrea-Chumbile/raw/master/libertades%20economicas%20Africa%20Subsahariana.csv"
+freeafrica=import(lkDTA)
+
+##limpiando
+libafrica=freeafrica[c(1,4,10,13,14,15)]
+head(libafrica)
+
+libafrica[,-c(1)]=lapply(libafrica[,-c(1)], as.numeric) # a numerico
+str(libafrica)
+
+names(libafrica) = c("Pais", "Derechos_Propiedad","Libertad_Empresarial", "Libertad_Comercial","Libertad_Inversion","Libertad_Financiera") 
+
+libafrica=na.omit(libafrica)
+libafrica$Pais=trimws(libafrica$Pais,whitespace = "[\\h\\v]")
+```
+
+#Limpieza data Europa
+```{r}
+library(rio)
+data="https://github.com/G2800/Trabajo-estadistica-Gabriela-Vidal-Gabriela-Ore-Andrea-Chumbile/raw/master/libertades%20economicas%20Europa.csv"
+ivariables=import(data)
+# eliminando columnas innecesarias
+ivariables[,c(5:9)] = NULL
+ivariables[,c(2,3,6,7)] = NULL
+# cambiando de nombres 
+names(ivariables)
+names(ivariables) = c("Pais", "Derechos_Propiedad","Libertad_Empresarial", "Libertad_Comercial","Libertad_Inversion","Libertad_Financiera")
+# a numérico 
+ivariables[,c(2:6)]=lapply(ivariables[,c(2:6)],as.numeric)
+str(ivariables)
+# omitir los NA's 
+ivariables=na.omit(ivariables)
+ivariables$Pais=trimws(ivariables$Pais,whitespace = "[\\h\\v]")
+```
+
+# Variable: PBI
+```{r}
+library(htmltab)
+linkGDP= "https://www.cia.gov/library/publications/resources/the-world-factbook/fields/211rank.html"
+linkPath_GDP='//*[@id="rankOrder"]'
+gdp= htmltab(doc = linkGDP,which =linkPath_GDP)
+gdp=gdp[,-c(1,4)]
+names(gdp) = c("Pais", "PBI")
+gdp$PBI =   gsub("\\$|\\,", "", gdp$PBI)
+gdp$PBI = as.numeric(gdp$PBI)
+str(gdp)
+gdp=na.omit(gdp)
+gdp$Pais=trimws(gdp$Pais,whitespace = "[\\h\\v]")
+```
+
+MERGE de AFRICA Y EUROPA
+```{r}
+#junto africa, europa
+europafrica=rbind(libafrica,ivariables)
+
+#merge con todas las variables independientes
+
+total=merge(europafrica,gdp)
+```
+
+MERGE DE RELIGION Y TOTAL
+```{r}
+data=merge(religion,total,by.x='Pais', by.y='Pais')
+#Al realizar el merge nos quedamos con 72 paises de Africa y de Europa
+```
+

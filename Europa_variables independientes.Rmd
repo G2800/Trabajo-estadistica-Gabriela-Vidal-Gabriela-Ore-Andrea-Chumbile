@@ -1,0 +1,60 @@
+---
+title: "Europa:variables independientes"
+output: html_notebook
+---
+
+
+
+# variables: derecho de propiedad, libertad empresarial, comercial, de inversión y financiera
+```{r}
+library(rio)
+data="https://github.com/G2800/Trabajo-estadistica-Gabriela-Vidal-Gabriela-Ore-Andrea-Chumbile/raw/master/libertades%20economicas%20Europa.csv"
+ivariables=import(data)
+
+# eliminando columnas innecesarias
+ivariables[,c(5:9)] = NULL
+ivariables[,c(2,3,6,7)] = NULL
+
+# cambiando de nombres 
+names(ivariables)
+names(ivariables) = c("Pais", "Derechos_Propiedad","Libertad_Empresarial", "Libertad_Comercial","Libertad_Inversion","Libertad_Financiera")
+
+# a numérico 
+ivariables[,c(2:6)]=lapply(ivariables[,c(2:6)],as.numeric)
+str(Europa)
+
+# omitir los NA's 
+ivariables=na.omit(ivariables)
+
+ivariables$Pais=trimws(ivariables$Pais,whitespace = "[\\h\\v]")
+
+```
+
+# Variable: PBI
+```{r}
+
+library(htmltab)
+linkGDP= "https://www.cia.gov/library/publications/resources/the-world-factbook/fields/211rank.html"
+linkPath_GDP='//*[@id="rankOrder"]'
+gdp= htmltab(doc = linkGDP,which =linkPath_GDP)
+
+gdp=gdp[,-c(1,4)]
+names(gdp) = c("Pais", "PBI")
+gdp$PBI =   gsub("\\$|\\,", "", gdp$PBI)
+gdp$PBI = as.numeric(gdp$PBI)
+str(gdp)
+
+gdp=na.omit(gdp)
+
+gdp$Pais=trimws(gdp$Pais,whitespace = "[\\h\\v]")
+
+```
+
+# merge: 
+```{r}
+Europa=merge(ivariables,gdp)
+
+```
+
+ 
+

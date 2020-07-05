@@ -94,6 +94,40 @@ fviz_silhouette(res.agnes)
 ```
 #la silueta es 0.32 con la técnica aglomerativa
 
+```{r}
+#acá proponemos 3 clusters
+res.agnes1<- hcut(g.dist, k = 3,hc_func='agnes',hc_method = "ward.D")
+total$clustAG1=res.agnes1$cluster
+```
+
+```{r}
+fviz_dend(res.agnes1, cex = 0.7,horiz = F)  
+```
+#se puede ver que el número de interacciones es aprox 0.7
+```{r}
+fviz_silhouette(res.agnes1)
+```
+#con tres clusters la silueta es mayor, pero hay casos sin clusterizar (negativos)
+```{r}
+#acá proponemos 2 clusters
+res.agnes2<- hcut(g.dist, k = 2,hc_func='agnes',hc_method = "ward.D")
+total$clustAG2=res.agnes2$cluster
+```
+
+```{r}
+fviz_dend(res.agnes2, cex = 0.7,horiz = F)  
+```
+#con dos clusters el número de interacciones se aproxima a 1
+
+```{r}
+fviz_silhouette(res.agnes2)
+```
+
+```{r}
+total[total$clustAG2==1 ,'Pais'] #vemos que todos son paises de Europa
+total[total$clustAG2==2 ,'Pais']#la gran mayoría África, excepto por Turquía, Grecia y Kosovo
+```
+
 
 
 

@@ -1,0 +1,217 @@
+#Limpieza de África
+```{r}
+library(rio)
+lkDTA="https://github.com/G2800/Trabajo-estadistica-Gabriela-Vidal-Gabriela-Ore-Andrea-Chumbile/raw/master/libertades%20economicas%20Africa%20Subsahariana.csv"
+freeafrica=import(lkDTA)
+```
+
+```{r}
+##limpiando
+libafrica=freeafrica[c(1,4,10,13,14,15)]
+head(libafrica)
+```
+
+```{r}
+libafrica[,-c(1)]=lapply(libafrica[,-c(1)], as.numeric) # a numerico
+```
+
+```{r}
+str(libafrica)
+```
+
+```{r}
+names(libafrica) = c("Pais", "Derechos_Propiedad","Libertad_Empresarial", "Libertad_Comercial","Libertad_Inversion","Libertad_Financiera") 
+```
+
+
+```{r}
+libafrica=na.omit(libafrica)
+libafrica$Pais=trimws(libafrica$Pais,whitespace = "[\\h\\v]")
+```
+
+```{r}
+library(rio)
+data="https://github.com/G2800/Trabajo-estadistica-Gabriela-Vidal-Gabriela-Ore-Andrea-Chumbile/raw/master/libertades%20economicas%20Europa.csv"
+ivariables=import(data)
+# eliminando columnas innecesarias
+ivariables[,c(5:9)] = NULL
+ivariables[,c(2,3,6,7)] = NULL
+# cambiando de nombres 
+names(ivariables)
+names(ivariables) = c("Pais", "Derechos_Propiedad","Libertad_Empresarial", "Libertad_Comercial","Libertad_Inversion","Libertad_Financiera")
+# a numérico 
+ivariables[,c(2:6)]=lapply(ivariables[,c(2:6)],as.numeric)
+str(ivariables)
+# omitir los NA's 
+ivariables=na.omit(ivariables)
+ivariables$Pais=trimws(ivariables$Pais,whitespace = "[\\h\\v]")
+```
+
+# Variable: PBI
+```{r}
+library(htmltab)
+linkGDP= "https://www.cia.gov/library/publications/resources/the-world-factbook/fields/211rank.html"
+linkPath_GDP='//*[@id="rankOrder"]'
+gdp= htmltab(doc = linkGDP,which =linkPath_GDP)
+gdp=gdp[,-c(1,4)]
+names(gdp) = c("Pais", "PBI")
+gdp$PBI =   gsub("\\$|\\,", "", gdp$PBI)
+gdp$PBI = as.numeric(gdp$PBI)
+str(gdp)
+gdp=na.omit(gdp)
+gdp$Pais=trimws(gdp$Pais,whitespace = "[\\h\\v]")
+```
+
+#junto africa, europa
+```{r}
+europafrica=rbind(libafrica,ivariables)
+```
+
+#merge con todas las variables independientes
+```{r}
+total=merge(europafrica,gdp)
+```
+
+
+```{r}
+library(htmltab)
+link_wik="https://en.wikipedia.org/wiki/Importance_of_religion_by_country"
+linkPath_wik='//*[@id="mw-content-text"]/div/table'
+religion=htmltab(doc=link_wik, which=linkPath_wik)
+head(religion)
+```
+
+#Preprocesamiento de la data
+```{r}
+names(religion) = c("Pais","Importante","NoImportante")
+```
+
+```{r}
+library(readr)
+religion$Importante <- parse_number(religion$Importante)
+religion$NoImportante <- parse_number(religion$NoImportante)
+religion[,c(1,2,3)]=lapply(religion[,c(1,2,3)], trimws,whitespace = "[\\h\\v]")
+religion[,-c(1)]=lapply(religion[,-c(1)], as.numeric) # a numerico
+```
+
+MERGE DE RELIGION Y TOTAL
+```{r}
+data=merge(religion,total,by.x='Pais', by.y='Pais')
+#Al realizar el merge nos quedamos con 72 paises de Africa y de Europa
+```
+
+
+
+#clusterización aglomerativa
+
+
+```{r}
+library(cluster)
+
+g.dist = daisy(total[,c(2:7)], metric="gower")
+```
+
+```{r}
+library(factoextra)
+
+res.agnes<- hcut(g.dist, k = 4,hc_func='agnes',hc_method = "ward.D")
+
+total$clustAG=res.agnes$cluster
+```
+
+```{r}
+fviz_silhouette(res.agnes)
+```
+#la silueta es 0.32 con la técnica aglomerativa
+
+
+
+```{r}
+##Analis factorial de las variables independientes
+total1=as.data.frame(scale(total[,c(2:7)]))
+```
+
+```{r}
+library(psych)
+pearsonA1 = cor(total1)
+pearsonA1
+```
+```{r}
+cor.plot(pearsonA1, 
+         numbers=T, 
+         upper=FALSE, 
+         main = "Correlation", 
+         show.legend = FALSE)
+```
+
+#Según los datos obtenidos, vemos que existe una correlación fuerte entre los componentes del índice de libertad económica. Para mayor claridad, ejecutamos el análisis KMO:
+
+```{r}
+KMO(total1) 
+```
+#El MSA indica que sí es adecuado juntar las variables. 
+
+```{r}
+fa.parallel(pearsonA1, fm="pa", fa="fa", main = "Scree Plot",n.obs = nrow(total1))
+```
+#se puede notar que solo recomienda 1 factor
+```{r}
+totalaF <- fa(total1,nfactors=1,rotate="varimax")
+```
+
+
+```{r}
+totalaF$loadings
+```
+#Con la construcción de 1 factor, vemos que el 71.3% de las variables son explicadas por el modelo.
+
+
+```{r}
+totalaF$scores
+```
+```{r}
+fa.diagram(totalaF)
+```
+
+```{r}
+sort(totalaF$communalities)
+```
+```{r}
+sort(totalaF$uniquenesses)
+```
+
+```{r}
+sort(totalaF$complexity)
+```
+
+
+```{r}
+scoresA1=as.data.frame(totalaF$scores)
+names(scoresA1)=c("libertadesaf")
+TOTAL=merge(total,scoresA1, by=0)
+TOTAL$Row.names=NULL
+```
+
+
+
+```{r}
+#ANALISIS DE REGRESION LINEAL
+#Generamos un modelo de regresión lineal
+
+datatotal=as.data.frame(scale(data[,c(2:9)]))
+names(datatotal)
+datatotal$NoImportante=NULL
+modelo=lm(Importante~.,data=datatotal)
+summary(modelo)
+```
+```{r}
+
+```
+
+
+
+
+
+
+
+
